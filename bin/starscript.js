@@ -255,7 +255,7 @@ var Star = {};
     cache.state = "loaded";
     if(cache.type === "script"){
       cache.isEval = true;
-      eval.apply( window, [cache.file]);
+      cache.stack = eval.apply( window, [cache.file]);
     }
     //success callbacks
     for(var i =0;i<cache.listeners.length;i++){
@@ -398,8 +398,9 @@ var Star = {};
     var cache = StarCache[options.url];
     var deep = cache.stack;
     //if file have dependencies
-    if(deep && deep.listeners && deep.complete === false)
+    if(deep && deep.listeners && deep.complete === false){
       deep.listeners.push(onStackComplete);
+    }
     else
       onStackComplete();
   }
@@ -449,6 +450,7 @@ var Star = {};
         });
       }
     }
+    
     return stack;
   }
   
