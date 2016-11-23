@@ -255,7 +255,7 @@ var Star = {};
     cache.state = "loaded";
     if(cache.type === "script"){
       cache.isEval = true;
-      cache.stack = eval(cache.file);
+      eval.apply( window, [cache.file]);
     }
     //success callbacks
     for(var i =0;i<cache.listeners.length;i++){
@@ -334,7 +334,7 @@ var Star = {};
         //files already loaded
         if(cache.type === "script" && !cache.isEval){
           cache.isEval = true;
-          cache.stack = eval(cache.file);
+          cache.stack =  eval.apply( window, [cache.file]);
         }
         options.success(cache.file,options);
       }
