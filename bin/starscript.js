@@ -373,6 +373,18 @@ var Star = {};
     return '';
   }
   /**
+  * Public Function
+  * Set a loaded file
+  *
+  * url : Url of file, short url available
+  * file : new value of file
+  */
+  Star.SetFile = function(url,file){
+    url = Star.CleanPath(url);
+    if(StarCache[url])
+      StarCache[url].file = file;
+  }
+  /**
   * Private Function
   * on Import success
   *
