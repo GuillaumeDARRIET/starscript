@@ -1,5 +1,5 @@
 /**
-* StarScript 1.0.0
+* StarScript 1.0.1
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -75,12 +75,36 @@ var Star = {};
   * Create a StarScript Class
   *
   * ClassName : New class name (string)
-  * ParentClass : inherited class (object or string, can be null)
+  * ParentClass : inherited class (object or string, can be null) OR array with :[0] =>inherited class, 
+  other are interfaces(objects or strings)
   * pattern  : class pattern (object)
   * Static :  static methods and attibutes of class (object, optional)
   * return a function
   */
-  Star.Class = function Class (ClassName,ParentClass,pattern,Static){
+  Star.Class = function Class (ClassName,ParentObj,pattern,Static){
+    var ParentClass;
+    var interfaces;
+    if(Array.isArray(ParentObj)){
+      ParentClass = ParentObj.shift();
+      interfaces = ParentObj;
+    }
+    else{
+      ParentClass = ParentObj;
+      interfaces = [];
+    }
+    //implements interfaces :
+    var prop,inter;
+    for(var ii =0;ii<interfaces.length;ii++){
+      for(var key in interfaces[ii]){
+        inter = interfaces[ii];
+        if(typeof(inter) === 'string')
+          inter = eval(inter);
+        prop = inter[key];
+        if(typeof(prop) === "function")
+          pattern[key] = eval("("+prop.toString()+")");
+      }
+    }
+    //define parent
     if(typeof(ParentClass) === 'string')
       ParentClass = eval(ParentClass);
     
@@ -88,7 +112,7 @@ var Star = {};
       ParentClass = Star.StarObject;
     
     var ParentName = ParentClass?ParentClass.Static.__name__:"";
-    //extends
+    //extends parent class
     if(ParentClass){
       var ParentStatic = ParentClass.Static;
       var parent = cloneObject(ParentStatic.__pattern__);
@@ -144,6 +168,18 @@ var Star = {};
     return NewClass;
   };
   /**
+  * Public Function
+  * Create a StarScript Interface
+  *
+  * InterfaceName : the interface Name (string)
+  * Pattern : Pattern of the interface (object)
+  */
+  Star.Interface = function(InterfaceName,Pattern){
+    Pattern.__name__ = InterfaceName;
+    return Pattern;
+  };
+  
+  /**
   * Public Class
   * Base class
   */
@@ -168,9 +204,9 @@ var Star = {};
   * Attach class to a package
   *
   * NameSpace : package Name (string)
-  * Class : a StarScript class
+  * ClassOrInter : a StarScript Class Or Interface
   */
-  Star.Package = function Package(NameSpace,Class){
+  Star.Package = function Package(NameSpace,ClassOrInter){
     var Package = window;
     if(NameSpace !== ""){
       var packageArray = NameSpace.split(".");
@@ -181,7 +217,10 @@ var Star = {};
         Package = Package[packageArray[i]];
       }
     }
-    Package[Class.Static.__name__] = Class;
+    if(!ClassOrInter.Static)
+      Package[ClassOrInter.__name__] = ClassOrInter;//interface
+    else
+     Package[ClassOrInter.Static.__name__] = ClassOrInter;//class
   }
   
   /*******************
