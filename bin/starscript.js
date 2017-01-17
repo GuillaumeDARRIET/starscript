@@ -1,5 +1,5 @@
 /**
-* StarScript 1.0.1
+* StarScript 1.0.2
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -122,7 +122,7 @@ var Star = {};
           var f = parent[i];
           if(!pattern[i])
             pattern[i] = f;
-          if(!ParentStatic.__parentName__ || i.indexOf(ParentStatic.__parentName__) === -1)
+          if(!ParentStatic.__parentName__ || i.substr(0,ParentStatic.__parentName__.length+1)!== ParentStatic.__parentName__+"_")
             pattern[ParentName+"_"+i] = f;
         }
         else if(!pattern[i]){
