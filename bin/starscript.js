@@ -1,5 +1,5 @@
 /**
-* StarScript 1.0.2
+* StarScript 1.0.3
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -292,7 +292,7 @@ var Star = {};
     cache.file = xhr.responseText;
     cache.event = evt;
     cache.state = "loaded";
-    if(cache.type === "script"){
+    if(cache.type === "script" || cache.type==="jslib"){
       cache.isEval = true;
       cache.stack = eval.apply( window, [cache.file]);
     }
@@ -371,7 +371,7 @@ var Star = {};
         cache.listeners.push(options);//one loading are usefull
       if(cache.state === "loaded"){
         //files already loaded
-        if(cache.type === "script" && !cache.isEval){
+        if((cache.type === "script" || cache.type==='jslib') && !cache.isEval){
           cache.isEval = true;
           cache.stack =  eval.apply( window, [cache.file]);
         }

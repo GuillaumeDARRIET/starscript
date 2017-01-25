@@ -1,5 +1,5 @@
 /**
-* StarBuilder 1.0.0
+* StarBuilder 1.0.1
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -18,6 +18,14 @@
         removeTabulations : true,
         removeBreakLines : true,
         removeMultiWhiteSpaces : true
+      },
+      jslib:{
+        added : false,
+        removeScriptComments : false,
+        removeHtmlComments : false,
+        removeTabulations : false,
+        removeBreakLines : false,
+        removeMultiWhiteSpaces : false
       },
       text:{
         added : false,
@@ -53,7 +61,35 @@
       }
     },
     regexpFunctions:{
-      removeScriptComments:function(data){return data.replace(/(\/\*([\s\S]*?)\*\/)|(\/\/(.*)$)/gm,"");},
+      removeScriptComments:function(data){
+        
+        //identifier les chaines de caractères
+        data = data.replace(/("[^"\n\r]*?")|('[^'\n\r]*?')/gm,
+        function(str){
+          //identifier les faux commentaires dans les chaines de caractères
+          str = str.replace(/(\/\*)(.*?)(\*\/)/g,
+          function(s1,$1,$2,$3){
+            return '/StarBuilderRemoveScriptCommentsStart'+$2+'StarBuilderRemoveScriptCommentsEnd/';
+          });
+          str = str.replace(/\/\//g,"/StarBuilderRemoveScriptDoubleSlashs/");
+          return str;
+        });
+        //suppression des commentaires /*
+        data = data.replace(/\/\*[\s\S]*?\*\//gm,"");
+        //suppression des commentaires //
+        data = data.replace(/(\/\/[^\n\r]*[\n\r]+)/g,"");
+        //identifier les chaine de caractères de nouveau
+        data = data.replace(/("[^"\n\r]*?")|('[^'\n\r]*?')/gm,function(str){
+          //identifier les faux commentaires dans les chaines de caractères
+          str = str.replace(/(\/StarBuilderRemoveScriptCommentsStart)(.*?)(StarBuilderRemoveScriptCommentsEnd\/)/g,
+          function(s1,$1,$2,$3){
+            return '/*'+$2+'*/';
+          });
+          str = str.replace(/\/StarBuilderRemoveScriptDoubleSlashs\//g,"//");
+          return str;
+        });
+        return data;
+      },
       removeHtmlComments:function(data){return data.replace(/<!--[\s\S]*?-->/gm,"");},
       removeTabulations:function(data){return data.replace(/\t/gm," ");},
       removeBreakLines:function(data){return data.replace(/(\r\n|\n|\r)/gm," ");},
@@ -91,15 +127,17 @@
   function onStackComplete(){
     var build = {};
     var StarCache = Star.GetCacheCopy();
-    var cache,exclude,file;
+    var cache,exclude,file,path;
+    var exludedPathsLength = BuilderConfig.exludedPaths.length;
     for(var url in StarCache){
       cache = StarCache[url];
       //type filter
       if(BuilderConfig.fileTypes[cache.type] && BuilderConfig.fileTypes[cache.type].added===true){
         exclude = false;
         //path filter
-        for(var path in BuilderConfig.exludedPaths){
-          if(BuilderConfig.exludedPaths[path] && url.indexOf(path) === 0){
+        for(var i=0; i< exludedPathsLength; i++){
+          path = Star.CleanPath(BuilderConfig.exludedPaths[i]);
+          if(url.indexOf(path) === 0){
             exclude = true;
             break;
           }
@@ -113,6 +151,7 @@
         }
       }
     }
+    
     var data = JSON.stringify(build);
     data = "Star.AddCachePreload("+data+");";
     download(data,BuilderConfig.name+".js","text/plain");
