@@ -11,7 +11,12 @@ Star.SetConfig({
     loaderProgress:false,
     importStack:false
   }
+  //,localStorageId:"my product version"
+
 });
+  //StarScript use localstorage with getTime id, if you want to get loaded file from localstorage you can add a storage ID
+  //use Star.LocalStorageUpToDate() to know if your current version match with localStorage files 
+
 
 //Star.Impot take two arguments :
 //- an array with files' url

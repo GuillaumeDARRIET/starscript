@@ -1,5 +1,5 @@
 /**
-* StarScript 1.0.3
+* StarScript 1.0.4
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -18,7 +18,8 @@ var Star = {};
       loaderError:false,
       loaderProgress:false,
       importStack:false
-    }
+    },
+    localStorageId:(new Date()).getTime()
   };
   /**
   * Public Function
@@ -230,6 +231,7 @@ var Star = {};
   StarCache = {};
   
   /**
+  * Private function 
   * Add a new item in StarCache, with default params
   */
   function addCache(url){
@@ -241,18 +243,6 @@ var Star = {};
       type:"",
       stack : false,
       isEval:false
-    }
-  }
-  /**
-  * Public Function
-  * Add preloading cache by StarBuilder
-  */
-  Star.AddCachePreload = function (build){
-    for(var url in build){
-      addCache(url);
-      StarCache[url].file = build[url].file;
-      StarCache[url].type = build[url].type;
-      StarCache[url].state = "loaded";
     }
   }
   /**
@@ -277,6 +267,55 @@ var Star = {};
     url = url.replace('//','/');
     return url;
   }
+  
+  //local storage
+  Star.LocalStorageUpToDate = function(){
+    return localStorage.getItem("localStorageId") == StarConfig.localStorageId;
+  }
+  /**
+  * Private function 
+  * Get file from local storage and put it in StarCache
+  */
+  function addCacheFromLocalStorage(url){
+    if(!Star.LocalStorageUpToDate()){
+      localStorage.clear();
+      localStorage.setItem("localStorageId",StarConfig.localStorageId);
+      return false;
+    }
+    var s = localStorage.getItem(url);
+    if(s){
+      var ob = JSON.parse(s);
+      addCache(url);
+      StarCache[url].file = ob.file;
+      StarCache[url].type = ob.type;
+      StarCache[url].state = "loaded";
+      if(ob.type=="script"){
+        StarCache[url].isEval = true;
+        StarCache[url].stack =  eval.apply( window, [StarCache[url].file]);
+      }
+      return true;
+    }
+    return false;
+  }
+  /**
+  * Private function 
+  * Get file from local storage and put it in StarCache
+  */
+  function addToLocalStorage(url,type,file){
+    var ob = {
+      type:type,
+      file:file
+    }
+    var s = JSON.stringify(ob);
+    try{
+      localStorage.setItem(url,s);
+      return true;
+    }
+    catch(e){
+      console.log(e);
+      return false;
+    }
+  }
   /**
   * Private Function
   * Handle load file success
@@ -292,7 +331,8 @@ var Star = {};
     cache.file = xhr.responseText;
     cache.event = evt;
     cache.state = "loaded";
-    if(cache.type === "script" || cache.type==="jslib"){
+    addToLocalStorage(url,cache.type,cache.file);
+    if(cache.type === "script"){
       cache.isEval = true;
       cache.stack = eval.apply( window, [cache.file]);
     }
@@ -365,13 +405,14 @@ var Star = {};
     options.url = Star.CleanPath(options.url);
     
     //loading file are already ask
+    var cache;
     if(StarCache[options.url] && (!options.nocache || StarCache[options.url].state!=="loaded") ){
-      var cache = StarCache[options.url];
+      cache = StarCache[options.url];
       if(cache.state === "loading")
         cache.listeners.push(options);//one loading are usefull
       if(cache.state === "loaded"){
         //files already loaded
-        if((cache.type === "script" || cache.type==='jslib') && !cache.isEval){
+        if(cache.type === "script" && !cache.isEval){
           cache.isEval = true;
           cache.stack =  eval.apply( window, [cache.file]);
         }
@@ -379,6 +420,12 @@ var Star = {};
       }
       if(cache.state === "error" && options.error)
         options.error(cache.event,options);//last loading fail
+      return;
+    }
+    //local storage
+    if(addCacheFromLocalStorage(options.url)){
+      cache = StarCache[options.url];
+      options.success(cache.file,options);
       return;
     }
     
@@ -389,7 +436,6 @@ var Star = {};
     
     var xhr = new XMLHttpRequest();
     xhr.url = options.url;
-    
     xhr.addEventListener("load", onXHRSuccess, false);
     xhr.addEventListener("error", onXHRError, false);
     xhr.addEventListener("progress", onXHRProgress, false);
