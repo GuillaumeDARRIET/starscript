@@ -7,11 +7,11 @@ You can:
 - Import external files (js, css, html, json or other custom text files)
 ...
 
-A JS builder it's allow to gather all imported files in one.
-You can custom this tool :
-- exlude specifics paths
-- add or exclude file's types 
-- add or set building functions
+StarLib is available !
+ - Micro templating
+ - Routing
+ - Events
+ - Views
 ...
 
 There are no dependency.
