@@ -285,6 +285,8 @@ var Star = {};
   * Get file from local storage and put it in StarCache
   */
   function addCacheFromLocalStorage(url){
+    if(!StarConfig.useLocalStorage)
+      return false;
     if(!Star.LocalStorageUpToDate()){
       localStorage.clear();
       localStorage.setItem("localStorageId",StarConfig.localStorageId);
@@ -311,7 +313,7 @@ var Star = {};
   */
   function addToLocalStorage(url,type,file){
     if(!StarConfig.useLocalStorage || !StarConfig.storedFileTypes[type])
-      return;
+      return false;
     var ob = {
       type:type,
       file:file
