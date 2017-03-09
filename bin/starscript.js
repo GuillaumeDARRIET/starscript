@@ -1,5 +1,5 @@
 /**
-* StarScript 1.0.4
+* StarScript 1.0.6
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -19,7 +19,15 @@ var Star = {};
       loaderProgress:false,
       importStack:false
     },
-    localStorageId:(new Date()).getTime()
+    useLocalStorage:false,
+    localStorageId:(new Date()).getTime(),
+    storedFileTypes:{
+      "script":true,
+      "css":true,
+      "html":true,
+      "json":false,
+      "text":false,
+    }
   };
   /**
   * Public Function
@@ -126,7 +134,7 @@ var Star = {};
           if(!ParentStatic.__parentName__ || i.substr(0,ParentStatic.__parentName__.length+1)!== ParentStatic.__parentName__+"_")
             pattern[ParentName+"_"+i] = f;
         }
-        else if(!pattern[i]){
+        else if(pattern[i] === undefined){
           pattern[i] = parent[i];
         }
       }
@@ -302,6 +310,8 @@ var Star = {};
   * Get file from local storage and put it in StarCache
   */
   function addToLocalStorage(url,type,file){
+    if(!StarConfig.useLocalStorage || !StarConfig.storedFileTypes[type])
+      return;
     var ob = {
       type:type,
       file:file
@@ -554,7 +564,7 @@ var Star = {};
   /**debug**/
   
   function debug(type,msg){
-    if(StarConfig.debug[type])
+    if(StarConfig.debug[type] && console && console.log)
       console.log("["+type+"] "+msg);
   }
 })();
