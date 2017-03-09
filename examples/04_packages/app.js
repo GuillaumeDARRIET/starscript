@@ -4,11 +4,11 @@ Star.Package("app",
   //second argument is a class
   Star.Class("MyClass",null,{
     
-    construct : function(){
+    construct : function construct(){
       this.log("MyClass");
     },
     
-    log:function(msg){
+    log:function log(msg){
       var el = document.getElementById('trace');
       el.innerHTML = msg+"<br/>"+el.innerHTML;
     }
@@ -22,7 +22,7 @@ Star.Package("app.utils",
   
   Star.Class("Tool",app.MyClass,{
     
-    construct:function(){
+    construct:function construct(){
       this.log("Tool");
     }
    

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base href="/www/starscript/examples/11_router/">
+		<meta charset="utf-8">
+    <title>10 ROUTING</title>
+    <style>
+      .link{
+        text-decoration : underline;
+        cursor : pointer;
+        font-weight : bold;
+      }
+      .link:hover{
+        color : #3333DD;
+      }
+    </style>
+  </head>
+  <body>
+  <h1>10 ROUTING</h1>
+   
+  <span data="page1" id="link1" class="link" >Page 1</span>
+  <span data="page2"id="link2" class="link" >Page 2</span>
+  <!-- this link use alias, real route is page2 -->
+  <span data="my-page-two" id="link3" class="link" >My page 2</span>
+  
+  <a href="page3/param1/param2" class="link" >Page 3</a>
+  <a href="page4" class="link" >Page 4</a>
+  
+  <h3 id="trace"></h3>
+    
+  <script src="../../bin/starscript.js"></script>
+  <script src="../../bin/starlib.js"></script>
+  <script src="web/app.js"></script>
+  </body>
+</html>

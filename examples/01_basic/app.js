@@ -6,13 +6,13 @@ var MyClass = Star.Class("MyClass",null,{
   attr2:"",
   
   //constructor
-  construct : function(_attr2){
+  construct : function construct(_attr2){
     this.attr1 ++; //'this' is the instance of class
     this.attr2 = _attr2;
   },
   
   //just a basic method to display text
-  print : function(){
+  print : function print(){
     document.getElementById("trace").innerHTML = this.attr2;
   }
   

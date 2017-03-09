@@ -1,31 +1,31 @@
-//applicatio package
+//application package
 Star.Package("app",
   //Loader class
   Star.Class("Loader",null,{
     
     //on progress event
-    onProgress:function(loaded,total,options){
+    onProgress:function onProgress(loaded,total,options){
       //if 'loaded' and 'total' equal 0, it's mean event.lengthComputable = false
       //probably your server gzip your file
       this.log("loading : "+loaded+"/"+total);
     },
     
     //error event
-    onError:function(event,options){
+    onError:function onError(event,options){
       this.log("error : "+options.url);
     },
     
     //success
-    onSuccess:function(file,options){
+    onSuccess:function onSuccess(file,options){
       this.log("success : "+options.url);
       this.log(file);
     },
     
     
-    load:function(url){
+    load:function load(url){
       //test http server available
       var cross_domain = window.location.href.substring(0,4);
-      if(cross_domain !== "file"){
+      if(cross_domain === "http"){
         
         //all params are set here
         //only url are require
@@ -61,7 +61,7 @@ Star.Package("app",
 
     },
     
-    log:function(msg){
+    log:function log(msg){
       var el = document.getElementById("trace");
       el.innerHTML = msg+"<br />"+el.innerHTML;
     }
@@ -72,7 +72,3 @@ Star.Package("app",
 var loader = app.Loader();
 
 loader.load("test.txt");
-
-
-
-

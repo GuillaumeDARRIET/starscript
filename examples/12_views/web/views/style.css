@@ -1,0 +1,7 @@
+body{
+  background-color : <%=bodybg%>;
+}
+.content{
+  color : #3333AA;
+  padding : 50px;
+}

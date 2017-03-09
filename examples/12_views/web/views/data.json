@@ -1,0 +1,9 @@
+{
+  "bodybg":"#CCCCCC",
+
+  "title":"My title",
+  
+  "desc":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vehicula mi at erat pulvinar scelerisque. Vivamus pulvinar justo ipsum, a convallis nulla tempus sit amet. Duis vulputate vulputate nibh nec luctus. Integer ut bibendum lacus. Suspendisse venenatis nec ligula ut tempus. Vivamus bibendum convallis bibendum. Vestibulum ac vulputate ex. Sed sed ex euismod, consectetur sapien a, eleifend est. Ut rutrum ornare velit a vehicula. Nunc non faucibus dui. Nullam maximus iaculis dolor, vitae elementum nisi eleifend eu.",
+  
+  "tab":["A","B","C"]
+}

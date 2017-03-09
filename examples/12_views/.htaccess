@@ -1,0 +1,4 @@
+Options +FollowSymlinks
+RewriteEngine on
+RewriteCond $1 !^(index\.html|web|robots\.txt|sitemap\.xml)
+RewriteRule ^(.*)$ index.html?/$1 [L]

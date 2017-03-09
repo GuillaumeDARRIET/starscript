@@ -1,0 +1,13 @@
+<h2><%=title%></h2>
+
+<div class="content" ><%=desc%></div>
+
+<div class="test" >
+<%
+  var result = "";
+  for(var i=0;i<tab.length;i++){
+    result += "tab["+i+"] : "+tab[i]+"<br />";
+  }
+  print(result);
+%>
+</div>

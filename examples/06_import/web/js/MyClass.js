@@ -8,7 +8,7 @@ Star.Package("app",
 
   Star.Class("MyClass",null,{
     
-    construct:function(){
+    construct:function construct(){
      
       //you can get all loaded file with :
       var file = Star.GetFile("[text]/file1.txt");
@@ -18,7 +18,7 @@ Star.Package("app",
       this.log(file);
     },
  
-    log:function(msg){
+    log:function log(msg){
       var el = document.getElementById("trace");
       el.innerHTML = msg+"<br />"+el.innerHTML;
     }

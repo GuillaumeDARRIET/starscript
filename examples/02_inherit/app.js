@@ -2,19 +2,19 @@
 var MyParent = Star.Class("MyParent",null,{
   name:"",
   
-  construct:function(name){
+  construct:function construct(name){
     this.name = name;
   },
   
-  setName:function(name){
+  setName:function setName(name){
     this.name = name;
   },
   
-  getName:function(){
+  getName:function getName(){
     return this.name;
   },
   
-  log:function(msg){
+  log:function log(msg){
     var el = document.getElementById("trace");
     el.innerHTML = msg+"<br />"+el.innerHTML
   }
@@ -24,20 +24,20 @@ var MyParent = Star.Class("MyParent",null,{
 //Child Class
 var MyChild = Star.Class("MyChild",MyParent,{
   //new function
-  logName:function(){
+  logName:function logName(){
     var customName = this.getName();
     this.log(customName);
   },
   
   //override function :
-  getName:function(){
+  getName:function getName(){
     return "-"+this.name+"-";
   },
   
   //override function and call parent function
-  log:function(msg){
+  log:function log(msg){
     msg = "[LOG] "+msg;
-    //to call parent function, use  : "[PrentName]_[Method](params...)"
+    //to call parent function, use  : "[ParentName]_[Method](params...)"
     this.MyParent_log(msg);
   }
   
