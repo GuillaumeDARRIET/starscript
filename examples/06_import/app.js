@@ -37,3 +37,32 @@ Star.Import([
   var instance = app.MyClass();
   
 });
+
+// if you want to control order of loading : you can do
+//Fist argument : array of array of urls, second : the callback funtion
+/**
+Star.Import(
+[
+  //dependencie1.js and dependencie2.js are loaded simultaneously, in first
+  [
+    "path/to/dependencie1.js",
+    "path/to/dependencie2.js"
+  ],
+  //lib.js is loaded in second, after dependencie1.js and dependencie2.js are executed
+  [
+    "path/to/lib.js"
+  ],
+  //myclass1.js and myclass2.js are loaded in last, after lib.js is executed
+  [
+    "path/to/myclass1.js",
+    "path/to/myclass2.js"
+  ]
+]
+,function(){
+  
+  //do something
+  
+});
+
+*/
+
