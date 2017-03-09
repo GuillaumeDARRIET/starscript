@@ -1,5 +1,5 @@
 /**
-* StarScript 1.0.6
+* StarScript 1.0.7
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -405,8 +405,7 @@ var Star = {};
   */
   Star.Load = function Load(options){
     if(!options.url){
-      console.log("url are missing");
-      throw "StarLoadError";
+      throw "StarLoadError: url are missing";
       return;
     }
     
@@ -497,7 +496,8 @@ var Star = {};
       if(stack.cmp === stack.total){
         stack.complete = true;
         debug("importStack",stack.label);
-        stack.callback();
+        if(stack.callback)
+          stack.callback();
         for(var i=0;i<stack.listeners.length;i++){
           stack.listeners[i]();
         }
@@ -522,24 +522,35 @@ var Star = {};
   * return a object contain information about callback and files
   */
   Star.Import = function Import(orders,callback){
+    //array of dependencies
+    if(orders.length > 0 && typeof(orders[0]) === "object"){
+      var source = DeepImport(0,orders.length-1);
+      var tempFct = new Function("orders","callback",source);
+      return tempFct(orders,callback);
+    }
+    
     var stack = {
       total:orders.length,
       cmp:0,
       callback:callback,
       listeners:[],
-      complete:false
+      complete:false,
+      label:''
     };
+    
     if(StarConfig.debug.importStack){
-      stack.label = callback.toString();
-      stack.label = stack.label.replace(/(\r\n|\n|\r)/gm," ");
-      stack.label = stack.label.replace(/\t/gm," ");
-      stack.label = stack.label.replace(/\s{2,}/gm," ");
-      stack.label = stack.label.substring(13,70)+"...";
+      if(callback){
+        stack.label = callback.toString().replace(/(\r\n|\n|\r|\t|\s{2,})/gm," ").substring(13,70)+"...";
+      }else{
+        stack.label = "Not Import Callback function";
+      }
     }
+    
     if(stack.total === 0){
       stack.complete = true;
       debug("importStack",stack.label);
-      callback();
+      if(callback)
+        callback();
     }
     else{
       var url,tab,type;
@@ -561,6 +572,21 @@ var Star = {};
     }
     
     return stack;
+  }
+  
+  /**
+  * Private Function
+  * Recursive Import
+  */
+  function DeepImport(id,max){
+    if(id == max){
+      return "Star.Import(orders["+id+"], callback );";
+    }else{
+      var source = "Star.Import(orders["+id+"], function(){";
+      source += DeepImport(id+1,max);
+      source += "}); ";
+    }
+    return source;
   }
   
   /**debug**/
