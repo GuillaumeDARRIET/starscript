@@ -1,5 +1,5 @@
 /**
-* StarLib 1.0.2
+* StarLib 1.0.3
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -154,7 +154,7 @@ Star.Package("Star",
       var route="";
       if(this.lang != ''){//localization activate
         if(tab.length >0 && tab[0] != this.lang && this.autorizedLangs.indexOf(tab[0]) !== -1){
-          if(cancelReload){//language change, reload page
+          if(!cancelReload){//language change, reload page
             window.location.href = this.baseURI+uri;
             return;
           }else
