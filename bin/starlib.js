@@ -1,5 +1,5 @@
 /**
-* StarLib 1.0.1
+* StarLib 1.0.2
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -142,7 +142,8 @@ Star.Package("Star",
       evt.preventDefault();
       var target = evt.currentTarget;
       var href = target.getAttribute("href");
-      this.setURI(href);
+      if(href)
+        this.setURI(href);
     },
     __parsePathname:function __parsePathname(pathname,fullURI,cancelReload){
       this.route = "",this.routeAlias="",this.params=[];
@@ -179,11 +180,12 @@ Star.Package("Star",
     catchHyperlink:function catchHyperlink(container){
       if(container){
         var links = container.getElementsByTagName("a");
+        var href;
         for(var i=0;i<links.length;i++){
-          if(links[i].className.indexOf("StarHyperlink") === -1 && 
-          links[i].getAttribute("href").substr(0,4) != "http" &&
-          links[i].getAttribute("href").substr(0,6) != "mailto" &&
-          links[i].getAttribute("href").substr(0,3) != "tel"){
+          href = links[i].getAttribute("href");
+          if(links[i].className.indexOf("StarHyperlink") === -1 && href && 
+          href.substr(0,4) != "http" && href.substr(0,6) != "mailto" &&
+          href.substr(0,3) != "tel"){
             links[i].className += " StarHyperlink";
             links[i].addEventListener("click",this.__onClickHyperlink);
             links[i].addEventListener("touchstart",this.__onClickHyperlink);
