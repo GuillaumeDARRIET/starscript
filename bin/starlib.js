@@ -1,5 +1,5 @@
 /**
-* StarLib 1.0.3
+* StarLib 1.0.4
 * author DARRIET GUILLAUME 
 * https://lebonnumero.fr/
 *
@@ -188,7 +188,6 @@ Star.Package("Star",
           href.substr(0,3) != "tel"){
             links[i].className += " StarHyperlink";
             links[i].addEventListener("click",this.__onClickHyperlink);
-            links[i].addEventListener("touchstart",this.__onClickHyperlink);
           }
         }
       }
