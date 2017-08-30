@@ -1,13 +1,15 @@
 /**
-* StarLib 1.0.4
-* author DARRIET GUILLAUME 
+* StarLib 1.0.5
+* author DARRIET GUILLAUME
 * https://lebonnumero.fr/
 *
 */
-
+//template method :
+/*jshint evil:true */
 /**
 * INTERFACE EVENT DISPATCHER
 */
+/*global Star*/
 Star.Package("Star",
   Star.Interface("StarEventDispatcher",{
     on:function on(eventName,handler,params){
@@ -28,7 +30,7 @@ Star.Package("Star",
       }
       else{
         var id = this.__eventDispatcherHandlers[eventName].indexOf(handler);
-        if(id !=-1){
+        if(id !==-1){
           this.__eventDispatcherHandlers[eventName].splice(id, 1);
           this.__eventDispatcherParams[eventName].splice(id, 1);
         }
@@ -37,8 +39,9 @@ Star.Package("Star",
     },
     trigger:function trigger(eventName,evt){
       this.__eventDispatcherInit(eventName);
-      if(!evt)
+      if(!evt){
         evt = {};
+      }
       evt.eventName = eventName;
       evt.dispatcher = this;
       this.__eventDispatcherInit(eventName);
@@ -49,8 +52,9 @@ Star.Package("Star",
       return this;
     },
     __eventDispatcherInit:function __eventDispatcherInit(eventName){
-      if(!eventName)
+      if(!eventName){
         return;
+      }
       if(!this.__eventDispatcherHandlers){
         this.__eventDispatcherHandlers = {};
         this.__eventDispatcherParams = {};
@@ -64,74 +68,109 @@ Star.Package("Star",
 );
 /**
 * INTERFACE TEMPLATE
+* FROM UNDERSCORE JS TEMPLATE WITH MODIFICATIONS
 */
 Star.Package("Star",
   Star.Interface("StarTemplate",{
-    __templateEvalScope : function __templateEvalScope(s,data){
-      var arguments = [], values = [];
-      for(var key in data){
-        values.push(data[key]);
-        arguments.push(key);
+    template : function template(text,_data,customSetting) {
+      var settings = {
+          evaluate    : /<%([\s\S]+?)%>/g,
+          interpolate : /<%=([\s\S]+?)%>/g,
+          escape      : /<%-([\s\S]+?)%>/g
+      };
+      if(customSetting){
+        settings.evaluate = customSetting.evaluate || settings.evaluate;
+        settings.interpolate = customSetting.interpolate || settings.interpolate;
+        settings.escape = customSetting.escape || settings.escape;
       }
-      arguments.push("__expressionToEvaluate");
-      values.push(s);
-      var source = "var print = function(msg){return msg;}; ";
-      source += "return eval(__expressionToEvaluate);";
-      arguments.push(source);
-      
-      var render = Function.apply(null,arguments);
-      return render.apply(null,values);
-    },
-    template:function template(s,data){
-      var regexp = /\<\%([\s\S]*?)\%\>/gm;
-      var tab = s.match(regexp);
-      if(!tab || tab.length === 0 )
-        return s;
-      var exp;
-      for(var i=0;i<tab.length;i++){
-        exp = tab[i];
-        if(exp.substr(2,1) === "="){
-          exp = exp.substring(3);
-          exp = exp.substring(0,exp.length-2).trim();
-          var catchExp = exp.split('"').join('\\"');
-          exp = ' try {print('+exp+');}catch(e){print(\"<%='+catchExp+'%>\");}';
+      // Combine delimiters into one regular expression via alternation.
+      var matcher = RegExp([
+        settings.escape.source,
+        settings.interpolate.source,
+        settings.evaluate.source
+      ].join('|') + '|$', 'g');
+
+      // Compile the template source, escaping string literals appropriately.
+      var index = 0;
+      var source = "__p+='";
+      var escapes = {
+        "'":      "'",
+        '\\':     '\\',
+        '\r':     'r',
+        '\n':     'n',
+        '\u2028': 'u2028',
+        '\u2029': 'u2029'
+      };
+      var escaper = /\\|'|\r|\n|\u2028|\u2029/g;
+      var escapeChar = function(match) {
+        return '\\' + escapes[match];
+      };
+      text.replace(matcher, function(match, escape, interpolate, evaluate, offset) {
+        source += text.slice(index, offset).replace(escaper, escapeChar);
+        index = offset + match.length;
+        if (interpolate || escape ) {
+          var s = interpolate || escape;
+          source += "';\n";
+          source += "try{__t="+s+"+'';}catch(e){__t='##"+s+"##';}\n";
+          if(escape){
+            source += "__p+=noHtml(__t); \n";
+          }else{
+            source += "__p+=__t; \n";
+          }
+          source +="__p+='";
+          //source += "'+\n( __t = (typeof "+interpolate+" !== 'undefined' ? "+interpolate+" : '<%="+interpolate+"%>' )  )+\n'";
+          //source += "'+\n( typeof "+interpolate+" !== 'undefined' ? "+interpolate+" : '<%="+interpolate+"%>'   )+\n'";
+          //source += "'+\n( __t = (function(){var temp;try{temp="+interpolate+";}catch(e){temp='<%="+interpolate+"%>';}return temp;})()  )+\n'";
+        } else if (evaluate) {
+          source += "';\n" + evaluate + "\n__p+='";
         }
-        else{
-          exp = exp.substring(2);
-          exp = exp.substring(0,exp.length-2);
-        }
-        var result = this.__templateEvalScope(exp,data);
-        var resType = typeof(result);
-        if(resType === "number" || resType === "string")
-          result = result+"";
-        else
-          result = "";
-        s = s.split(tab[i]).join(result);
+        return match;
+      });
+      source += "';\n";
+      source = 'with(obj||{}){\n' + source + '}\n';
+      source = "var __t,__p='',__j=Array.prototype.join," +
+        "print=function(){__p+=__j.call(arguments,'');};\n" +
+        "noHtml=function(s){return s.replace(/<\\/?[^>]+(>|$)/g, ''); };\n" +
+        source + 'return __p;\n';
+      try {
+        var render = new Function('obj', source);
+      } catch (e) {
+        e.source = source;
+        throw e;
       }
-      return s;
+      var template = function(data) {
+        return render.call(this, data);
+      };
+      template.source = 'function(obj){\n' + source + '}';
+      return template(_data);
     }
   })
 );
-
 /**
 * CLASS ROUTER
 */
 Star.Package("Star",
   Star.Class("StarRouter",[null,Star.StarEventDispatcher],{
-    pathname:"",baseURI:"/",uri:'',autorizedLangs:[],alias:{},lang:"",params:[],route:'',routeAlias:'',
-    construct:function construct(){
-      if(Star.StarRouter.Static.instance !== null)
+    pathname:"",baseURI:"/",uri:'',autorizedLangs:[],alias:{},lang:"",params:[],route:'',routeAlias:'',paramsAlias:[],
+    construct:function construct(parse){
+      parse = parse !== false ? true : false;
+      if(Star.StarRouter.Static.instance !== null){
         throw "ConflictSingleton: Star Router must be unique";
+      }
       var base = document.getElementsByTagName("base");
-      if(base.length < 1)
+      if(base.length < 1){
         throw "MissingBase: Add a base tag in head of document with relative path in href attribute, like <base href=\"/relative/path/\"> or <base href=\"/\">";
+      }
       this.baseURI = base[0].getAttribute("href");
-      if(this.baseURI.substr(0,4)==="http")
+      if(this.baseURI.substr(0,4)==="http"){
         throw "BaseHrefError: use relative path in base tag";
-      if(this.baseURI.substr(0,1)!="/" || this.baseURI.substr(this.baseURI.length-1,1) != "/")
+      }
+      if(this.baseURI.substr(0,1)!== "/" || this.baseURI.substr(this.baseURI.length-1,1) !== "/"){
         throw "BaseHrefError: base href must start and finish by / ";
-      
-      this.__parsePathname(window.location.pathname,true,true);
+      }
+      if(parse){
+        this.__parsePathname(window.location.pathname,true,true);
+      }
       window.addEventListener("popstate", this.__onPopState);
     },
     __onPopState:function __onPopState(evt){
@@ -142,40 +181,80 @@ Star.Package("Star",
       evt.preventDefault();
       var target = evt.currentTarget;
       var href = target.getAttribute("href");
-      if(href)
+      if(href){
         this.setURI(href);
+      }
     },
     __parsePathname:function __parsePathname(pathname,fullURI,cancelReload){
-      this.route = "",this.routeAlias="",this.params=[];
+      this.route = "";
+      this.params=[];
       var uri = pathname;
-      if(fullURI)
+      if(fullURI){
         uri = pathname.substring(this.baseURI.length);
+      }
+      this.uri = uri;
       var tab = uri.split("/");
-      var route="";
-      if(this.lang != ''){//localization activate
-        if(tab.length >0 && tab[0] != this.lang && this.autorizedLangs.indexOf(tab[0]) !== -1){
+      if(this.lang !== ''){//localization activate
+        if(tab.length >0 && tab[0] !== this.lang && this.autorizedLangs.indexOf(tab[0]) !== -1){
           if(!cancelReload){//language change, reload page
             window.location.href = this.baseURI+uri;
             return;
-          }else
+          }else{
             this.lang = tab[0];
+          }
         }
-        if(tab.length > 0 && tab[0] === this.lang)
+        if(tab.length > 0 && tab[0] === this.lang){
           tab = tab.slice(1);
+        }
       }
-      if(tab.length > 0)
-        route = tab[0];
-      if(tab.length > 1)
+      this.route = "";
+      if(tab.length > 0){
+        this.route = tab[0];
+      }if(tab.length > 1){
         this.params = tab.slice(1);
-      if(this.params.length === 1 && this.params[0] === "")
+      }if(this.params.length === 1 && this.params[0] === ""){
         this.params = [];
-      this.routeAlias = route;
-      if(this.alias[route])
-        this.route = this.alias[route];
-      else
-        this.route = route;
-      this.uri = (this.lang===""?"":this.lang +"/") + route + (this.params.length>0?"/"+this.params.join("/"):"");
+      }
+      this._detectAlias();
+      this.uri = (this.lang===""?"":this.lang +"/") + this.routeAlias + (this.paramsAlias.length>0?"/"+this.paramsAlias.join("/"):"");
       this.pathname = this.baseURI + this.uri;
+    },
+    _detectAlias:function _detectAlias(){
+      //gestion des alias
+      var currentURI = this.params.length > 0 ? this.route+"/"+this.params.join("/") : this.route;
+
+      var routeParams = "";
+      this.routeAlias = this.route;
+      this.paramsAlias = this.params;
+      for(var routeAlias in this.alias){
+        routeParams = currentURI.substr(routeAlias.length);//le reste de la route
+        if(routeAlias+routeParams === currentURI && (routeParams==="" || routeParams.substr(0,1)==="/") ){
+          var tab = (this.alias[routeAlias]+routeParams).split("/");
+          this.route = "";
+          this.params = [];
+          if(tab.length > 0){
+            this.route = tab[0];
+          }if(tab.length > 1){
+            this.params = tab.slice(1);
+          }if(this.params.length === 1 && this.params[0] === ""){
+            this.params = [];
+          }
+          this.routeAlias = routeAlias;
+          this.paramsAlias = routeParams.substr(1).split("/");
+          break;
+        }
+      }
+    },
+    addAlias:function addAlias(alias,target){
+      if(typeof(alias) === "string" && typeof(target)=== "string"){
+        this.alias[alias] = target;
+      }
+      else if(typeof(alias) === "object"){
+        for(var key in alias){
+          this.alias[key] = alias[key];
+        }
+      }
+      this._detectAlias();
     },
     catchHyperlink:function catchHyperlink(container){
       if(container){
@@ -183,25 +262,14 @@ Star.Package("Star",
         var href;
         for(var i=0;i<links.length;i++){
           href = links[i].getAttribute("href");
-          if(links[i].className.indexOf("StarHyperlink") === -1 && href && 
-          href.substr(0,4) != "http" && href.substr(0,6) != "mailto" &&
-          href.substr(0,3) != "tel"){
+          if(links[i].className.indexOf("StarHyperlink") === -1 && href &&
+          href.substr(0,4) !== "http" && href.substr(0,6) !== "mailto" &&
+          href.substr(0,3) !== "tel"){
             links[i].className += " StarHyperlink";
             links[i].addEventListener("click",this.__onClickHyperlink);
           }
         }
       }
-    },
-    addAlias:function addAlias(alias,target){
-      if(typeof(alias) === "string" && typeof(target)=== "string")
-        this.alias[alias] = target;
-      else if(typeof(alias) === "object"){
-        for(var key in alias){
-          this.alias[key] = alias[key];
-        }
-      }
-      if(this.alias[this.route])
-        this.route = this.alias[this.route];
     },
     setURI:function setURI(uri){
       this.__parsePathname(uri);
@@ -233,14 +301,15 @@ Star.Package("Star",
     }
   },{
     instance:null,
-    getInstance:function getInstance(){
-      if(Star.StarRouter.Static.instance === null)
-        Star.StarRouter.Static.instance =  Star.StarRouter();
+    getInstance:function getInstance(parse){
+      if(Star.StarRouter.Static.instance === null){
+        parse = parse !== false ? true : false;
+        Star.StarRouter.Static.instance =  Star.StarRouter(parse);
+      }
       return Star.StarRouter.Static.instance;
     }
   })
 );
-
 /**
 * CLASS VIEW
 */
@@ -251,15 +320,17 @@ Star.Package("Star",
     cssID:'',renderClearContainer:true,router:null,
     construct:function construct(){
       this.router = Star.StarRouter.Static.getInstance();
-      if(this.domID != "")
+      if(this.domID !== ""){
         this.container = document.getElementById(this.domID);
+      }
     },
     render: function render(){
       this.removeListeners();
       this.extractData();
-     
-      if(this.container && this.renderClearContainer)
+
+      if(this.container && this.renderClearContainer){
         this.container.innerHTML = "";
+      }
       this.appendHTML();
       this.appendCSS();
       this.router.catchHyperlink(this.container);
@@ -268,16 +339,18 @@ Star.Package("Star",
       var data;
       for(var i=0;i<this.dataFiles.length;i++){
         data = JSON.parse(Star.GetFile(this.dataFiles[i]));
-        for(var key in data)
+        for(var key in data){
           this.data[key] = data[key];
+        }
       }
     },
     appendCSS:function appendCSS(){
       var cssContainer;
       if(this.cssID !== ""){
         cssContainer = document.getElementById(this.cssID);
-        if(cssContainer && cssContainer.innerHTML !== "")
+        if(cssContainer && cssContainer.innerHTML !== ""){
           return;
+        }
       }
       var file,css="";
       for(var i=0;i<this.cssFiles.length;i++){
@@ -287,10 +360,11 @@ Star.Package("Star",
       }
       var style = document.createElement("style");
       style.innerHTML = css;
-      if(cssContainer)
+      if(cssContainer){
         cssContainer.appendChild(style);
-      else if(this.container)
+      }else if(this.container){
         this.container.appendChild(style);
+      }
     },
     appendHTML:function appendHTML(){
       var file,html="";
@@ -317,6 +391,6 @@ Star.Package("Star",
 * USE LOCALISATION
 */
 Star.Localization = function(defaultLang,autorizedLangs){
-  var router = Star.StarRouter.Static.getInstance();
+  var router = Star.StarRouter.Static.getInstance(false);
   return router.localization(defaultLang,autorizedLangs);
-}
+};

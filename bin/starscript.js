@@ -1,17 +1,18 @@
 /**
-* StarScript 1.0.7
-* author DARRIET GUILLAUME 
+* StarScript 1.0.8
+* author DARRIET GUILLAUME
 * https://lebonnumero.fr/
 *
 */
-
+//usefull to execute js files loaded by ajax requests
+/*jshint evil:true */
 /**
 * Main Scope
 */
 var Star = {};
 (function(){
   //config
-  StarConfig = {
+  var StarConfig = {
     paths:{},
     debug:{
       loaderSuccess:false,
@@ -29,62 +30,76 @@ var Star = {};
       "text":false,
     }
   };
+
+  /**debug**/
+  function debug(type,msg){
+    if(StarConfig.debug[type] && window.console && window.console.log){
+      window.console.log("["+type+"] "+msg);
+    }
+  }
+
   /**
   * Public Function
   * Set Config
   */
   Star.SetConfig = function(source,target){
-    if(!target)
+    if(!target){
       target = StarConfig;
+    }
     var attr,type;
     for(var key in source){
       type = typeof(source[key]);
       if(type === "object" && !Array.isArray(source[key])){
-        if(!target[key])
+        if(!target[key]){
           target[key] = {};
+        }
         Star.SetConfig(source[key],target[key]);
-      }
-      else
+      }else{
         target[key] = source[key];
+      }
+
     }
-  }
+  };
   /*******************
   *CLASS MAKER SECTION
   *********************/
-  
+
   /**
   * Private Function
   * Duplicate a class pattern
   *
-  * original : source object 
+  * original : source object
   * return an object
   */
   function cloneObject(original){
-    if(original === null)
+    if(original === null){
       return null;
-    if(original === undefined)
+    }
+    if(original === undefined){
       return undefined;
+    }
     var clone = Array.isArray(original) ?[]:{};
     var type = "";
     var prop;
     for(var key in original){
       prop = original[key];
       type = typeof(prop);
-      if(type === "object")
+      if(type === "object"){
         clone[key] = cloneObject(prop);
-      else if(type === "function")
+      }else if(type === "function"){
         clone[key] = eval("("+prop.toString()+")");
-      else
+      }else{
         clone[key] = prop;
+      }
     }
     return clone;
-  };
+  }
   /**
   * Public Function
   * Create a StarScript Class
   *
   * ClassName : New class name (string)
-  * ParentClass : inherited class (object or string, can be null) OR array with :[0] =>inherited class, 
+  * ParentClass : inherited class (object or string, can be null) OR array with :[0] =>inherited class,
   other are interfaces(objects or strings)
   * pattern  : class pattern (object)
   * Static :  static methods and attibutes of class (object, optional)
@@ -106,33 +121,39 @@ var Star = {};
     for(var ii =0;ii<interfaces.length;ii++){
       for(var key in interfaces[ii]){
         inter = interfaces[ii];
-        if(typeof(inter) === 'string')
+        if(typeof(inter) === 'string'){
           inter = eval(inter);
+        }
         prop = inter[key];
-        if(typeof(prop) === "function")
+        if(typeof(prop) === "function"){
           pattern[key] = eval("("+prop.toString()+")");
+        }
       }
     }
     //define parent
-    if(typeof(ParentClass) === 'string')
+    if(typeof(ParentClass) === 'string'){
       ParentClass = eval(ParentClass);
-    
-    if(!ParentClass && ClassName!="StarObject")
+    }
+
+    if(!ParentClass && ClassName!=="StarObject"){
       ParentClass = Star.StarObject;
-    
+    }
+
     var ParentName = ParentClass?ParentClass.Static.__name__:"";
     //extends parent class
     if(ParentClass){
       var ParentStatic = ParentClass.Static;
       var parent = cloneObject(ParentStatic.__pattern__);
-      
+
       for(var i in parent){
         if(typeof(parent[i]) === 'function'){
           var f = parent[i];
-          if(!pattern[i])
+          if(!pattern[i]){
             pattern[i] = f;
-          if(!ParentStatic.__parentName__ || i.substr(0,ParentStatic.__parentName__.length+1)!== ParentStatic.__parentName__+"_")
+          }
+          if(!ParentStatic.__parentName__ || i.substr(0,ParentStatic.__parentName__.length+1)!== ParentStatic.__parentName__+"_"){
             pattern[ParentName+"_"+i] = f;
+          }
         }
         else if(pattern[i] === undefined){
           pattern[i] = parent[i];
@@ -148,8 +169,9 @@ var Star = {};
           var func = clone[key];
           clone[key] = (function(instance,fct,fct_name){
             return function(){
-              if(instance[fct_name])
+              if(instance[fct_name]){
                 return fct.apply(instance,arguments);
+              }
             };
           })(clone,func,key);
         }
@@ -158,10 +180,11 @@ var Star = {};
         clone.construct.apply(clone,arguments);
       }
       return clone;
-    }
+    };
     //static
-    if(!Static)
+    if(!Static){
       Static = {};
+    }
     Static.__name__ = ClassName;
     Static.__parentName__ = ParentName;
     Static.__pattern__ = pattern;
@@ -171,9 +194,8 @@ var Star = {};
     Static.getParentClassName = function(){
       return Static.__parentName__;
     };
-    
+
     NewClass.Static = Static;
-    
     return NewClass;
   };
   /**
@@ -187,7 +209,7 @@ var Star = {};
     Pattern.__name__ = InterfaceName;
     return Pattern;
   };
-  
+
   /**
   * Public Class
   * Base class
@@ -196,18 +218,19 @@ var Star = {};
     construct:function(){},
     remove:function(){
       for(var index in this) {
-        if(index !="remove")
+        if(index !== "remove"){
           delete this[index];
+        }
       }
       delete this.remove;
     }
   });
-  
-  
+
+
   /*******************
   * PACKAGE SECTION
   *********************/
-  
+
   /**
   * Public Function
   * Attach class to a package
@@ -221,25 +244,27 @@ var Star = {};
       var packageArray = NameSpace.split(".");
       Package=window;
       for(var i=0;i<packageArray.length;i++){
-        if(!Package[packageArray[i]])
+        if(!Package[packageArray[i]]){
           Package[packageArray[i]] = {};
+        }
         Package = Package[packageArray[i]];
       }
     }
-    if(!ClassOrInter.Static)
+    if(!ClassOrInter.Static){
       Package[ClassOrInter.__name__] = ClassOrInter;//interface
-    else
+    }else{
      Package[ClassOrInter.Static.__name__] = ClassOrInter;//class
-  }
-  
+     window[ClassOrInter.Static.__name__] = ClassOrInter;
+    }
+  };
+
   /*******************
   * LOAD FILE SECTION
   *********************/
   //All files loaded
-  StarCache = {};
-  
+  var StarCache = {};
   /**
-  * Private function 
+  * Private function
   * Add a new item in StarCache, with default params
   */
   function addCache(url){
@@ -251,20 +276,20 @@ var Star = {};
       type:"",
       stack : false,
       isEval:false
-    }
+    };
   }
   /**
   * Public Function
   */
   Star.GetCacheCopy = function(){
     return JSON.parse(JSON.stringify(StarCache));
-  }
+  };
   /**
   * Public Function
   */
   Star.GetPathsCopy = function(){
     return JSON.parse(JSON.stringify(StarConfig.paths));
-  }
+  };
   /**
   * Public Function
   */
@@ -274,19 +299,20 @@ var Star = {};
     }
     url = url.replace('//','/');
     return url;
-  }
-  
+  };
+
   //local storage
   Star.LocalStorageUpToDate = function(){
-    return localStorage.getItem("localStorageId") == StarConfig.localStorageId;
-  }
+    return localStorage.getItem("localStorageId")+"" === StarConfig.localStorageId+"";
+  };
   /**
-  * Private function 
+  * Private function
   * Get file from local storage and put it in StarCache
   */
   function addCacheFromLocalStorage(url){
-    if(!StarConfig.useLocalStorage)
+    if(!StarConfig.useLocalStorage){
       return false;
+    }
     if(!Star.LocalStorageUpToDate()){
       localStorage.clear();
       localStorage.setItem("localStorageId",StarConfig.localStorageId);
@@ -299,7 +325,7 @@ var Star = {};
       StarCache[url].file = ob.file;
       StarCache[url].type = ob.type;
       StarCache[url].state = "loaded";
-      if(ob.type=="script"){
+      if(ob.type === "script"){
         StarCache[url].isEval = true;
         StarCache[url].stack =  eval.apply( window, [StarCache[url].file]);
       }
@@ -308,24 +334,43 @@ var Star = {};
     return false;
   }
   /**
-  * Private function 
+  * Private function
   * Get file from local storage and put it in StarCache
   */
   function addToLocalStorage(url,type,file){
-    if(!StarConfig.useLocalStorage || !StarConfig.storedFileTypes[type])
+    if(!StarConfig.useLocalStorage || !StarConfig.storedFileTypes[type]){
       return false;
+    }
     var ob = {
       type:type,
       file:file
-    }
+    };
     var s = JSON.stringify(ob);
     try{
       localStorage.setItem(url,s);
       return true;
     }
     catch(e){
-      console.log(e);
+      debug("localStorage",e);
       return false;
+    }
+  }
+  /**
+  * Private Function
+  * Handle load file error
+  */
+  function onXHRError(evt){
+    var url = evt.currentTarget.url;
+    var cache = StarCache[url];
+    cache.event = evt;
+    cache.state = "error";
+
+    //error callbacks
+    for(var i =0;i<cache.listeners.length;i++){
+      debug("loaderError",url);
+      if(cache.listeners[i].error){
+        cache.listeners[i].error(evt,cache.listeners[i]);
+      }
     }
   }
   /**
@@ -339,6 +384,7 @@ var Star = {};
       return;
     }
     var url = xhr.url;
+    debug("loaderSuccess",url);
     var cache = StarCache[url];
     cache.file = xhr.responseText;
     cache.event = evt;
@@ -350,49 +396,36 @@ var Star = {};
     }
     //success callbacks
     for(var i =0;i<cache.listeners.length;i++){
-      debug("loaderSuccess",url);
-      if(cache.listeners[i].success)
+      if(cache.listeners[i].success){
         cache.listeners[i].success(xhr.responseText,cache.listeners[i]);
+      }
     }
   }
-  /**
-  * Private Function
-  * Handle load file error
-  */
-  function onXHRError(evt){
-    var url = evt.currentTarget.url;
-    var cache = StarCache[url];
-    cache.event = evt;
-    cache.state = "error";
-    
-    //error callbacks
-    for(var i =0;i<cache.listeners.length;i++){
-      debug("loaderError",url);
-      if(cache.listeners[i].error)
-        cache.listeners[i].error(evt,cache.listeners[i]);
-    }
-  }
+
   /**
   * Private Function
   * Handle load file progress
   */
   function onXHRProgress(evt){
     var xhr = evt.currentTarget;
-    if(xhr.status !== 200)
+    if(xhr.status !== 200){
       return;
-    var loaded = total = 0;
+    }
+    var loaded = 0;
+    var total = 0;
     if(evt.lengthComputable){
       loaded = evt.loaded;
-      total = evt.total
+      total = evt.total;
     }
     var url = evt.currentTarget.url;
     var cache = StarCache[url];
-    
+
     //progress callbacks
     for(var i =0;i<cache.listeners.length;i++){
       debug("loaderProgress",url);
-      if(cache.listeners[i].progress)
+      if(cache.listeners[i].progress){
         cache.listeners[i].progress(loaded,total,cache.listeners[i]);
+      }
     }
   }
   /**
@@ -406,21 +439,22 @@ var Star = {};
   Star.Load = function Load(options){
     if(!options.url){
       throw "StarLoadError: url are missing";
-      return;
     }
-    
-    if(!options.type)
+
+    if(!options.type){
       options.type = "text";
-    
+    }
+
     //short url
     options.url = Star.CleanPath(options.url);
-    
+
     //loading file are already ask
     var cache;
     if(StarCache[options.url] && (!options.nocache || StarCache[options.url].state!=="loaded") ){
       cache = StarCache[options.url];
-      if(cache.state === "loading")
+      if(cache.state === "loading"){
         cache.listeners.push(options);//one loading are usefull
+      }
       if(cache.state === "loaded"){
         //files already loaded
         if(cache.type === "script" && !cache.isEval){
@@ -429,8 +463,9 @@ var Star = {};
         }
         options.success(cache.file,options);
       }
-      if(cache.state === "error" && options.error)
+      if(cache.state === "error" && options.error){
         options.error(cache.event,options);//last loading fail
+      }
       return;
     }
     //local storage
@@ -439,23 +474,23 @@ var Star = {};
       options.success(cache.file,options);
       return;
     }
-    
+
     //first loading
     addCache(options.url);
     StarCache[options.url].listeners.push(options);
     StarCache[options.url].type = options.type;
-    
+
     var xhr = new XMLHttpRequest();
     xhr.url = options.url;
     xhr.addEventListener("load", onXHRSuccess, false);
     xhr.addEventListener("error", onXHRError, false);
     xhr.addEventListener("progress", onXHRProgress, false);
-    
+
     xhr.open("POST", options.url);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.send(null);
     return xhr;
-  }
+  };
   /**
   * Public Function
   * Get a loaded file
@@ -464,10 +499,11 @@ var Star = {};
   */
   Star.GetFile = function(url){
     url = Star.CleanPath(url);
-    if(StarCache[url])
+    if(StarCache[url]){
       return StarCache[url].file;
+    }
     return '';
-  }
+  };
   /**
   * Public Function
   * Set a loaded file
@@ -477,9 +513,10 @@ var Star = {};
   */
   Star.SetFile = function(url,file){
     url = Star.CleanPath(url);
-    if(StarCache[url])
+    if(StarCache[url]){
       StarCache[url].file = file;
-  }
+    }
+  };
   /**
   * Private Function
   * on Import success
@@ -496,8 +533,9 @@ var Star = {};
       if(stack.cmp === stack.total){
         stack.complete = true;
         debug("importStack",stack.label);
-        if(stack.callback)
+        if(stack.callback){
           stack.callback();
+        }
         for(var i=0;i<stack.listeners.length;i++){
           stack.listeners[i]();
         }
@@ -510,8 +548,23 @@ var Star = {};
     if(deep && deep.listeners && deep.complete === false){
       deep.listeners.push(onStackComplete);
     }
-    else
+    else{
       onStackComplete();
+    }
+  }
+  /**
+  * Private Function
+  * Recursive Import
+  */
+  function DeepImport(id,max){
+    if(parseInt(id) === parseInt(max)){
+      return "Star.Import(orders["+id+"], callback );";
+    }else{
+      var source = "Star.Import(orders["+id+"], function(){";
+      source += DeepImport(id+1,max);
+      source += "}); ";
+      return source;
+    }
   }
   /**
   * Public Function
@@ -528,7 +581,7 @@ var Star = {};
       var tempFct = new Function("orders","callback",source);
       return tempFct(orders,callback);
     }
-    
+
     var stack = {
       total:orders.length,
       cmp:0,
@@ -537,7 +590,7 @@ var Star = {};
       complete:false,
       label:''
     };
-    
+
     if(StarConfig.debug.importStack){
       if(callback){
         stack.label = callback.toString().replace(/(\r\n|\n|\r|\t|\s{2,})/gm," ").substring(13,70)+"...";
@@ -545,12 +598,13 @@ var Star = {};
         stack.label = "Not Import Callback function";
       }
     }
-    
+
     if(stack.total === 0){
       stack.complete = true;
       debug("importStack",stack.label);
-      if(callback)
+      if(callback){
         callback();
+      }
     }
     else{
       var url,tab,type;
@@ -570,29 +624,8 @@ var Star = {};
         });
       }
     }
-    
+
     return stack;
-  }
-  
-  /**
-  * Private Function
-  * Recursive Import
-  */
-  function DeepImport(id,max){
-    if(id == max){
-      return "Star.Import(orders["+id+"], callback );";
-    }else{
-      var source = "Star.Import(orders["+id+"], function(){";
-      source += DeepImport(id+1,max);
-      source += "}); ";
-    }
-    return source;
-  }
-  
-  /**debug**/
-  
-  function debug(type,msg){
-    if(StarConfig.debug[type] && console && console.log)
-      console.log("["+type+"] "+msg);
-  }
+  };
+
 })();
