@@ -486,7 +486,7 @@ var Star = {};
     xhr.addEventListener("error", onXHRError, false);
     xhr.addEventListener("progress", onXHRProgress, false);
 
-    xhr.open("POST", options.url);
+    xhr.open("GET", options.url);
     xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
     xhr.send(null);
     return xhr;
